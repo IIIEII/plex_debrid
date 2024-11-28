@@ -1,17 +1,20 @@
 from base import *
 from ui.ui_print import *
 
+
 def strike(text):
     result = ''
     for c in text:
         result = result + c + '\u0336'
     return result
 
+
 def unstrike(text):
     result = ''
     for c in text:
         result = result + (c if c != '\u0336' else '')
     return result
+
 
 class release:
     # Define release attributes
@@ -27,6 +30,7 @@ class release:
             if regex.search(r'(?<=btih:).*?(?=&)', str(self.download[0]), regex.I):
                 self.hash = regex.findall(r'(?<=btih:).*?(?=&)', str(self.download[0]), regex.I)[0]
         self.cached = []
+        self.maybe_cached = []  # services where cached state can only be determined at time of download
         self.checked = False
         self.wanted = 0
         self.unwanted = 0
@@ -39,6 +43,7 @@ class release:
     def __eq__(self, other):
         return self.title == other.title
 
+
 class rename:
     replaceChars = [
         ['&', 'and'],
@@ -49,6 +54,7 @@ class rename:
         ['à', 'a'],
         ['ö', 'oe'],
         ['ô', 'o'],
+        ['ō', 'o'],
         ['ß', 'ss'],
         ['é', 'e'],
         ['è', 'e'],
@@ -56,16 +62,17 @@ class rename:
         ['sh!t', 'shit'],
         ['f**k', 'fuck'],
         ['f**king', 'fucking'],
-        [':', ''],
+        ['?', ''],
+        [':', '.?'],
         ['(', ''],
         [')', ''],
         ['`', ''],
         ['´', ''],
         [',', ''],
-        ['!', ''],
-        ['?', ''],
+        ['/', '.'],
+        ['!', '.?'],
         [' - ', ' '],
-        ["'", ''],
+        ["'", '.?'],
         ["\u200b", ''],
         ['*', ''],
         [' ', '.']
@@ -75,12 +82,13 @@ class rename:
         string = string.lower()
         for specialChar, repl in self.replaceChars:
             if specialChar.startswith('{{') and specialChar.endswith('}}'):
-                if regex.search(specialChar[2:-2].lower(),string):
-                    string = regex.sub(specialChar[2:-2].lower(),repl.lower(),string)
+                if regex.search(specialChar[2:-2].lower(), string):
+                    string = regex.sub(specialChar[2:-2].lower(), repl.lower(), string)
             else:
                 string = string.replace(specialChar.lower(), repl.lower())
         string = regex.sub(r'\.+', ".", string)
         return string
+
 
 class sort:
 
@@ -104,7 +112,8 @@ class sort:
                     print("0) Back")
                     indices = []
                     for index, version in enumerate(sort.versions):
-                        print(str(index + 1) + ') Edit version "' + version[0] + '"' + (' (disabled)' if '\u0336' in version[0] else '') )
+                        print(str(index + 1) + ') Edit version "' + version[0] + '"' + (
+                            ' (disabled)' if '\u0336' in version[0] else ''))
                         indices += [str(index + 1)]
                     print()
                     choice2 = input("Choose an action: ")
@@ -135,7 +144,7 @@ class sort:
                     print()
                     choice2 = input("Please choose a version to duplicate: ")
                     if choice2 in indices:
-                        default = copy.deepcopy(sort.versions[int(choice2)-1])
+                        default = copy.deepcopy(sort.versions[int(choice2) - 1])
                     else:
                         return
                 else:
@@ -145,7 +154,7 @@ class sort:
         return
 
     class version:
-        
+
         def setup(name, version_, new=False):
             back = False
             default = version_[3]
@@ -167,7 +176,8 @@ class sort:
                 print("0) Back")
                 print()
                 print("Triggers:")
-                letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
+                letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                           'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
                 letter_choice = []
                 l_o = 0
                 l_a = 0
@@ -178,7 +188,9 @@ class sort:
                     if len(rule[2]) >= l_o:
                         l_o = len(rule[1]) + 1
                 for index, rule in enumerate(version_[1]):
-                    print(str(letter_choice[index]) + ') ' + rule[0] + ' ' * (l_a - len(rule[0])) + ' requirement : ' + ' ' * (l_o - len(rule[1])) + rule[1] + '  ' + rule[2])
+                    print(str(letter_choice[index]) + ') ' + rule[0] + ' ' * (
+                                l_a - len(rule[0])) + ' requirement : ' + ' ' * (l_o - len(rule[1])) + rule[1] + '  ' +
+                          rule[2])
                 print()
                 print("Rules:")
                 indices = []
@@ -197,10 +209,14 @@ class sort:
                     if len(rule[2]) >= l_o:
                         l_o = len(rule[2]) + 1
                 for index, rule in enumerate(default):
-                    if rule[2] in ["highest","lowest"]:
-                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (l_o - len(rule[2])) + rule[2] + '  ')
+                    if rule[2] in ["highest", "lowest"]:
+                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (
+                                    l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (
+                                          l_o - len(rule[2])) + rule[2] + '  ')
                     else:
-                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
+                        print(str(index + 1) + ')' + ' ' * (l_i - len(str(index + 1))) + rule[0] + ' ' * (
+                                    l_a - len(rule[0])) + ' ' + rule[1] + ' ' * (l_s - len(rule[1])) + ': ' + ' ' * (
+                                          l_o - len(rule[2])) + rule[2] + '  ' + rule[3])
                 print()
                 print("[scraping language] : '" + version_[2] + "'")
                 print()
@@ -271,8 +287,9 @@ class sort:
 
         class trigger:
             def setup(choice, default, new=True):
-                letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z']
-                for index,letter in enumerate(letters):
+                letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                           'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+                for index, letter in enumerate(letters):
                     if letter == choice:
                         choice = str(index + 1)
                         break
@@ -318,7 +335,7 @@ class sort:
                             choice3 = input("Please choose an attribute: ")
                             if choice3 in indices:
                                 default[int(choice) - 1][int(choice2) - 1] = \
-                                sort.version.trigger.__subclasses__()[int(choice3) - 1].name
+                                    sort.version.trigger.__subclasses__()[int(choice3) - 1].name
                             choice2 = '2'
                     if choice2 == '2':
                         print("Please choose an operator for this trigger.")
@@ -348,10 +365,12 @@ class sort:
                             if subclass.name == default[int(choice) - 1][0]:
                                 break
                         while not working:
-                            if hasattr(subclass,"unit"):
-                                print("Please choose a value for this rule. The value you enter is in the unit '"+subclass.unit+"'. Make sure that the value you enter matches your chosen operator.")
+                            if hasattr(subclass, "unit"):
+                                print(
+                                    "Please choose a value for this rule. The value you enter is in the unit '" + subclass.unit + "'. Make sure that the value you enter matches your chosen operator.")
                             else:
-                                print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
+                                print(
+                                    "Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
                             print()
                             choice3 = input("Please enter a value: ")
                             if subclass.check(choice3):
@@ -402,7 +421,8 @@ class sort:
                         print("1) Edit  attribute : " + default[int(choice) - 1][0])
                         print("2) Edit  weight    : " + default[int(choice) - 1][1])
                         print("3) Edit  operator  : " + default[int(choice) - 1][2])
-                        if not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][2] in ["highest","lowest"]:
+                        if not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][2] in [
+                            "highest", "lowest"]:
                             print("4) Edit  value     : " + default[int(choice) - 1][3])
                         print()
                         print(
@@ -432,7 +452,8 @@ class sort:
                             print()
                             choice3 = input("Please choose an attribute: ")
                             if choice3 in indices:
-                                default[int(choice) - 1][int(choice2) - 1] = sort.version.rule.__subclasses__()[int(choice3) - 1].name
+                                default[int(choice) - 1][int(choice2) - 1] = sort.version.rule.__subclasses__()[
+                                    int(choice3) - 1].name
                             choice2 = '2'
                     if choice2 == '2':
                         weights = sort.version.rule.weights
@@ -467,7 +488,9 @@ class sort:
                         choice3 = input("Please choose an operator: ")
                         if choice3 in indices:
                             default[int(choice) - 1][int(choice2) - 1] = subclass.operators[int(choice3) - 1]
-                        if new and not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][2] in ["highest", "lowest"]:
+                        if new and not default[int(choice) - 1][0] == "cache status" and not default[int(choice) - 1][
+                                                                                                 2] in ["highest",
+                                                                                                        "lowest"]:
                             choice2 = '4'
                         elif new:
                             print("New rule added!")
@@ -479,10 +502,12 @@ class sort:
                             if subclass.name == default[int(choice) - 1][0]:
                                 break
                         while not working:
-                            if hasattr(subclass,"unit"):
-                                print("Please choose a value for this rule. The value you enter is in the unit '"+subclass.unit+"'. Make sure that the value you enter matches your chosen operator.")
+                            if hasattr(subclass, "unit"):
+                                print(
+                                    "Please choose a value for this rule. The value you enter is in the unit '" + subclass.unit + "'. Make sure that the value you enter matches your chosen operator.")
                             else:
-                                print("Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
+                                print(
+                                    "Please choose a value for this rule. Make sure that the value you enter matches your chosen operator.")
                             print()
                             choice3 = input("Please enter a value: ")
                             if subclass.check(choice3):
@@ -563,15 +588,16 @@ class sort:
                             return scraped_releases
                     elif self.weight == "preference":
                         if self.operator == "==":
-                            scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),reverse=True)
+                            scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),
+                                                  reverse=True)
                             return scraped_releases
                         if self.operator == ">=":
                             scraped_releases.sort(
-                                key=lambda s: (float(getattr(s, self.attribute)) >= float(self.value)),reverse=True)
+                                key=lambda s: (float(getattr(s, self.attribute)) >= float(self.value)), reverse=True)
                             return scraped_releases
                         if self.operator == "<=":
                             scraped_releases.sort(
-                                key=lambda s: (float(getattr(s, self.attribute)) <= float(self.value)),reverse=True)
+                                key=lambda s: (float(getattr(s, self.attribute)) <= float(self.value)), reverse=True)
                             return scraped_releases
                         if self.operator == "highest":
                             scraped_releases.sort(key=lambda s: float(getattr(s, self.attribute)), reverse=True)
@@ -581,31 +607,34 @@ class sort:
                             return scraped_releases
                         if self.operator == "include":
                             scraped_releases.sort(
-                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),reverse=True)
+                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),
+                                reverse=True)
                             return scraped_releases
                         if self.operator == "exclude":
                             scraped_releases.sort(
-                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),reverse=False)
+                                key=lambda s: bool(regex.search(self.value, getattr(s, self.attribute), regex.I)),
+                                reverse=False)
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": " + str(
+                        self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
                 return True
 
-            def upgrade(self,list):
+            def upgrade(self, list):
                 if len(list) == 0:
                     return False
                 self.weight = "requirement"
                 releases = []
                 for title in list:
-                    releases += [release("","",title,[],"",[],0)]
+                    releases += [release("", "", title, [], "", [], 0)]
                 upgrade = len(self.apply(releases)) == 0
                 self.weight = "upgrade"
                 return upgrade
-            
+
         class resolution(rule):
             name = "resolution"
             operators = ["==", ">=", "<=", "highest", "lowest"]
@@ -661,7 +690,7 @@ class sort:
                             return scraped_releases
                         if self.operator == "highest":
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
-                                                    reverse=True)
+                                                  reverse=True)
                             for release in scraped_releases[:]:
                                 if not 5 * round(float(getattr(release, self.attribute)) / 5) == 5 * round(
                                         float(getattr(scraped_releases[0], self.attribute) / 5)):
@@ -669,7 +698,7 @@ class sort:
                             return scraped_releases
                         if self.operator == "lowest":
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
-                                                    reverse=False)
+                                                  reverse=False)
                             for release in scraped_releases[:]:
                                 if not 5 * round(float(getattr(release, self.attribute)) / 5) == 5 * round(
                                         float(getattr(scraped_releases[0], self.attribute)) / 5):
@@ -678,7 +707,7 @@ class sort:
                     elif self.weight == "preference":
                         if self.operator == "==":
                             scraped_releases.sort(key=lambda s: (getattr(s, self.attribute) == self.value),
-                                                    reverse=True)
+                                                  reverse=True)
                             return scraped_releases
                         if self.operator == ">=":
                             scraped_releases.sort(
@@ -692,15 +721,16 @@ class sort:
                             return scraped_releases
                         if self.operator == "highest":
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
-                                                    reverse=True)
+                                                  reverse=True)
                             return scraped_releases
                         if self.operator == "lowest":
                             scraped_releases.sort(key=lambda s: 5 * round(float(getattr(s, self.attribute)) / 5),
-                                                    reverse=False)
+                                                  reverse=False)
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": " + str(
+                        self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -790,7 +820,8 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": " + str(
+                        self.operator) + " " + str(self.value))
                     return scraped_releases
 
         class file_names(rule):
@@ -803,15 +834,15 @@ class sort:
                         if self.operator == "include":
                             for release in scraped_releases[:]:
                                 remove = True
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"name"):
+                                    if hasattr(version, "name"):
                                         if bool(regex.search(self.value, version.name, regex.I)):
                                             remove = False
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         remove_version = True
                                         for file in version.files:
                                             if bool(regex.search(self.value, file.name, regex.I)):
@@ -825,15 +856,15 @@ class sort:
                         elif self.operator == "exclude":
                             for release in scraped_releases[:]:
                                 remove = False
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"name"):
+                                    if hasattr(version, "name"):
                                         if bool(regex.search(self.value, version.name, regex.I)):
                                             remove = True
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         remove_version = False
                                         for file in version.files:
                                             if bool(regex.search(self.value, file.name, regex.I)):
@@ -848,14 +879,14 @@ class sort:
                         if self.operator == "include":
                             for release in scraped_releases:
                                 release.file_name_sorting = 0
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 for version in release.files:
                                     version.file_name_sorting = 0
-                                    if hasattr(version,"name"):
+                                    if hasattr(version, "name"):
                                         if bool(regex.search(self.value, version.name, regex.I)):
                                             release.file_name_sorting = 1
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         for file in version.files:
                                             if bool(regex.search(self.value, file.name, regex.I)):
                                                 release.file_name_sorting = 1
@@ -866,14 +897,14 @@ class sort:
                         elif self.operator == "exclude":
                             for release in scraped_releases:
                                 release.file_name_sorting = 1
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 for version in release.files:
                                     version.file_name_sorting = 1
-                                    if hasattr(version,"name"):
+                                    if hasattr(version, "name"):
                                         if bool(regex.search(self.value, version.name, regex.I)):
                                             release.file_name_sorting = 0
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         for file in version.files:
                                             if bool(regex.search(self.value, file.name, regex.I)):
                                                 release.file_name_sorting = 0
@@ -883,7 +914,8 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": " + str(
+                        self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -909,20 +941,24 @@ class sort:
                         if ">=" in self.operator:
                             for release in scraped_releases[:]:
                                 remove = False
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"name"):
-                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                    if hasattr(version, "name"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                  version.name,
+                                                                                                  regex.I):
                                             continue
                                         if version.size <= float(self.value):
                                             remove = True
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         remove_version = False
                                         for file in version.files:
-                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                            if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                      file.name,
+                                                                                                      regex.I):
                                                 continue
                                             if file.size <= float(self.value):
                                                 remove = False
@@ -935,20 +971,24 @@ class sort:
                         elif "<=" in self.operator:
                             for release in scraped_releases[:]:
                                 remove = False
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 if len(getattr(release, "files")) == 0:
                                     continue
                                 for version in release.files[:]:
-                                    if hasattr(version,"name"):
-                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                    if hasattr(version, "name"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                  version.name,
+                                                                                                  regex.I):
                                             continue
                                         if version.size >= float(self.value):
                                             remove = True
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         remove_version = False
                                         for file in version.files:
-                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                            if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                      file.name,
+                                                                                                      regex.I):
                                                 continue
                                             if file.size >= float(self.value):
                                                 remove = False
@@ -962,18 +1002,22 @@ class sort:
                         if ">=" in self.operator:
                             for release in scraped_releases:
                                 release.file_size_sorting = 0
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 for version in release.files:
                                     version.file_size_sorting = 0
-                                    if hasattr(version,"name"):
-                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                    if hasattr(version, "name"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                  version.name,
+                                                                                                  regex.I):
                                             continue
                                         if version.size >= float(self.value):
                                             release.file_size_sorting = 1
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         for file in version.files:
-                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                            if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                      file.name,
+                                                                                                      regex.I):
                                                 continue
                                             if file.size >= float(self.value):
                                                 release.file_size_sorting = 1
@@ -984,18 +1028,22 @@ class sort:
                         elif "<=" in self.operator:
                             for release in scraped_releases:
                                 release.file_size_sorting = 0
-                                if not hasattr(release,"files"):
+                                if not hasattr(release, "files"):
                                     continue
                                 for version in release.files:
                                     version.file_size_sorting = 0
-                                    if hasattr(version,"name"):
-                                        if self.operator.startswith("video") and not regex.search(video_formats,version.name,regex.I):
+                                    if hasattr(version, "name"):
+                                        if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                  version.name,
+                                                                                                  regex.I):
                                             continue
                                         if version.size <= float(self.value):
                                             release.file_size_sorting = 1
-                                    elif hasattr(version,"files"):
+                                    elif hasattr(version, "files"):
                                         for file in version.files:
-                                            if self.operator.startswith("video") and not regex.search(video_formats,file.name,regex.I):
+                                            if self.operator.startswith("video") and not regex.search(video_formats,
+                                                                                                      file.name,
+                                                                                                      regex.I):
                                                 continue
                                             if file.size <= float(self.value):
                                                 release.file_size_sorting = 1
@@ -1005,7 +1053,8 @@ class sort:
                             return scraped_releases
                     return scraped_releases
                 except:
-                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": "+ str(self.operator) + " " + str(self.value))
+                    ui_print("version rule exception - ignoring " + self.attribute + " " + self.weight + ": " + str(
+                        self.operator) + " " + str(self.value))
                     return scraped_releases
 
             def check(self):
@@ -1020,7 +1069,7 @@ class sort:
 
         class retries(trigger):
             name = "retries"
-            operators = ["==",">=", "<="]
+            operators = ["==", ">=", "<="]
 
             def check(self):
                 try:
@@ -1028,17 +1077,19 @@ class sort:
                         return True
                     else:
                         print()
-                        print("This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
+                        print(
+                            "This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
                         print()
                         return False
                 except:
                     print()
-                    print("This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
+                    print(
+                        "This value is not in the correct format. Please enter a number larger than 0 (e.g. '420' or '69.69')")
                     print()
                     return False
 
-            def apply(self,element):
-                if hasattr(element,'ignored_count'):
+            def apply(self, element):
+                if hasattr(element, 'ignored_count'):
                     if self.operator == "==":
                         if float(self.value) == element.ignored_count:
                             return True
@@ -1048,12 +1099,12 @@ class sort:
                             return True
                         return False
                     if self.operator == "<=":
-                        if element.ignored_count <= float(self.value) :
+                        if element.ignored_count <= float(self.value):
                             return True
                         return False
                 else:
-                    if self.operator == "==" and float(self.value) == 0:
-                        return True
+                    if self.operator == "==":
+                        return float(self.value) == 0
                     if self.operator == ">=":
                         return False
                     if self.operator == "<=":
@@ -1075,53 +1126,69 @@ class sort:
                     print()
                     return False
 
-            def apply(self,element):
+            def apply(self, element):
                 try:
-                    if not hasattr(element,"offset_airtime"):
+                    if not hasattr(element, "offset_airtime"):
                         element.offset_airtime = {}
                     if element.type == "show":
                         for season in element.Seasons:
-                            if not hasattr(season,"offset_airtime"):
+                            if not hasattr(season, "offset_airtime"):
                                 season.offset_airtime = {}
                             for episode in season.Episodes:
-                                if not hasattr(episode,"offset_airtime"):
+                                if not hasattr(episode, "offset_airtime"):
                                     episode.offset_airtime = {}
                     elif element.type == "season":
                         for episode in element.Episodes:
-                            if not hasattr(episode,"offset_airtime"):
+                            if not hasattr(episode, "offset_airtime"):
                                 episode.offset_airtime = {}
-                    if hasattr(element,"first_aired"):
-                        element.offset_airtime[self.value] = datetime.datetime.strptime(element.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
-                    elif hasattr(element,"originallyAvailableAt"):
-                        element.offset_airtime[self.value] = datetime.datetime.strptime(element.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                    if hasattr(element, "first_aired"):
+                        element.offset_airtime[self.value] = datetime.datetime.strptime(element.first_aired,
+                                                                                        '%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(
+                            hours=float(self.value))
+                    elif hasattr(element, "originallyAvailableAt"):
+                        element.offset_airtime[self.value] = datetime.datetime.strptime(element.originallyAvailableAt,
+                                                                                        '%Y-%m-%d') + datetime.timedelta(
+                            hours=float(self.value))
                     if element.type == "movie":
                         return True
                     elif element.type == "show":
                         for season in element.Seasons:
-                            if hasattr(season,"first_aired"):
-                                season.offset_airtime[self.value] = datetime.datetime.strptime(season.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
-                            elif hasattr(season,"originallyAvailableAt"):
-                                season.offset_airtime[self.value] = datetime.datetime.strptime(season.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                            if hasattr(season, "first_aired"):
+                                season.offset_airtime[self.value] = datetime.datetime.strptime(season.first_aired,
+                                                                                               '%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(
+                                    hours=float(self.value))
+                            elif hasattr(season, "originallyAvailableAt"):
+                                season.offset_airtime[self.value] = datetime.datetime.strptime(
+                                    season.originallyAvailableAt, '%Y-%m-%d') + datetime.timedelta(
+                                    hours=float(self.value))
                             for episode in season.Episodes:
-                                if hasattr(episode,"first_aired"):
-                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
-                                elif hasattr(episode,"originallyAvailableAt"):
-                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
+                                if hasattr(episode, "first_aired"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,
+                                                                                                    '%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(
+                                        hours=float(self.value))
+                                elif hasattr(episode, "originallyAvailableAt"):
+                                    episode.offset_airtime[self.value] = datetime.datetime.strptime(
+                                        episode.originallyAvailableAt, '%Y-%m-%d') + datetime.timedelta(
+                                        hours=float(self.value))
                     elif element.type == "season":
                         for episode in element.Episodes:
-                            if hasattr(episode,"first_aired"):
-                                episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,'%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(hours=float(self.value))
-                            elif hasattr(episode,"originallyAvailableAt"):
-                                episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.originallyAvailableAt,'%Y-%m-%d') + datetime.timedelta(hours=float(self.value))
-                    return element.offset_airtime[self.value] < datetime.datetime.utcnow() 
+                            if hasattr(episode, "first_aired"):
+                                episode.offset_airtime[self.value] = datetime.datetime.strptime(episode.first_aired,
+                                                                                                '%Y-%m-%dT%H:%M:%S.000Z') + datetime.timedelta(
+                                    hours=float(self.value))
+                            elif hasattr(episode, "originallyAvailableAt"):
+                                episode.offset_airtime[self.value] = datetime.datetime.strptime(
+                                    episode.originallyAvailableAt, '%Y-%m-%d') + datetime.timedelta(
+                                    hours=float(self.value))
+                    return element.offset_airtime[self.value] < datetime.datetime.utcnow()
                 except:
                     if element.type == "season":
                         return True
                     return False
-        
+
         class year(trigger):
             name = "year"
-            operators = ["==",">=", "<="]
+            operators = ["==", ">=", "<="]
 
             def check(self):
                 try:
@@ -1133,13 +1200,13 @@ class sort:
                     print()
                     return False
 
-            def apply(self,element):
-                if hasattr(element,'year') or hasattr(element,'parentYear') or hasattr(element,'grandparentYear'):
-                    if hasattr(element,'year'):
+            def apply(self, element):
+                if hasattr(element, 'year') or hasattr(element, 'parentYear') or hasattr(element, 'grandparentYear'):
+                    if hasattr(element, 'year'):
                         year = element.year
-                    if hasattr(element,'parentYear'):
+                    if hasattr(element, 'parentYear'):
                         year = element.parentYear
-                    if hasattr(element,'grandparentYear'):
+                    if hasattr(element, 'grandparentYear'):
                         year = element.grandparentYear
                     if self.operator == "==":
                         if float(self.value) == year:
@@ -1159,12 +1226,12 @@ class sort:
             name = "media type"
             operators = ["all", "movies", "shows"]
 
-            def apply(self,element):
+            def apply(self, element):
                 if self.operator == "all":
                     return True
                 elif self.operator == "movies" and element.type == "movie":
                     return True
-                elif self.operator == "shows" and element.type in ["show","season","episode"]:
+                elif self.operator == "shows" and element.type in ["show", "season", "episode"]:
                     return True
                 return False
 
@@ -1182,15 +1249,16 @@ class sort:
                         "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
                     print()
                     return False
-            def apply(self,element):
+
+            def apply(self, element):
                 if self.operator == "==":
                     if element.query() == self.value:
                         return True
                 elif self.operator == "include":
-                    if regex.search(self.value,element.query(),regex.I):
+                    if regex.search(self.value, element.query(), regex.I):
                         return True
                 elif self.operator == "exclude":
-                    if regex.search(self.value,element.query(),regex.I):
+                    if regex.search(self.value, element.query(), regex.I):
                         return False
                     return True
                 return False
@@ -1205,23 +1273,25 @@ class sort:
                     return True
                 except:
                     print()
-                    print("This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
                     print()
                     return False
-            def apply(self,element):
+
+            def apply(self, element):
                 try:
-                    if hasattr(element,"requestedBy"):
+                    if hasattr(element, "requestedBy"):
                         if self.operator == "==":
                             if element.requestedBy.displayName == self.value:
                                 return True
                         elif self.operator == "include":
-                            if regex.search(self.value,element.requestedBy.displayName,regex.I):
+                            if regex.search(self.value, element.requestedBy.displayName, regex.I):
                                 return True
                         elif self.operator == "exclude":
-                            if regex.search(self.value,element.requestedBy.displayName,regex.I):
+                            if regex.search(self.value, element.requestedBy.displayName, regex.I):
                                 return False
                             return True
-                    elif hasattr(element,"user"):
+                    elif hasattr(element, "user"):
                         if len(element.user) > 0:
                             if type(element.user[0]) == list:
                                 for user in element.user:
@@ -1229,10 +1299,10 @@ class sort:
                                         if user[0] == self.value:
                                             return True
                                     elif self.operator == "include":
-                                        if regex.search(self.value,user[0],regex.I):
+                                        if regex.search(self.value, user[0], regex.I):
                                             return True
                                     elif self.operator == "exclude":
-                                        if regex.search(self.value,user[0],regex.I):
+                                        if regex.search(self.value, user[0], regex.I):
                                             return False
                                 if self.operator == "exclude":
                                     return True
@@ -1241,10 +1311,10 @@ class sort:
                                     if element.user[0] == self.value:
                                         return True
                                 elif self.operator == "include":
-                                    if regex.search(self.value,element.user[0],regex.I):
+                                    if regex.search(self.value, element.user[0], regex.I):
                                         return True
                                 elif self.operator == "exclude":
-                                    if regex.search(self.value,element.user[0],regex.I):
+                                    if regex.search(self.value, element.user[0], regex.I):
                                         return False
                                     return True
                     return False
@@ -1258,30 +1328,37 @@ class sort:
             def check(self):
                 try:
                     regex.search(self, self, regex.I)
-                    if self in ["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:
+                    if self in ["action", "adventure", "animation", "anime", "comedy", "crime", "disaster",
+                                "documentary", "Donghua", "drama", "eastern", "family", "fan-film", "fantasy",
+                                "film-noir", "history", "holiday", "horror", "indie", "music", "musical", "mystery",
+                                "none", "road", "romance", "science-fiction", "short", "sports", "sporting-event",
+                                "suspense", "thriller", "tv-movie", "war", "western"]:
                         return True
                     print("This value is not in the correct format. Please enter a valid genre from this list:")
-                    print('["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
+                    print(
+                        '["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
                     print()
                     return False
                 except:
                     print()
                     print("This value is not in the correct format. Please enter a valid genre from this list:")
-                    print('["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
+                    print(
+                        '["action","adventure","animation","anime","comedy","crime","disaster","documentary","Donghua","drama","eastern","family","fan-film","fantasy","film-noir","history","holiday","horror","indie","music","musical","mystery","none","road","romance","science-fiction","short","sports","sporting-event","suspense","thriller","tv-movie","war","western"]:')
                     print()
                     return False
-            def apply(self,element):
+
+            def apply(self, element):
                 try:
                     if self.operator == "==":
-                        if regex.search(self.value,str(element.genre()),regex.I):
+                        if regex.search(self.value, str(element.genre()), regex.I):
                             return True
                         return False
                     elif self.operator == "include":
-                        if regex.search(self.value,str(element.genre()),regex.I):
+                        if regex.search(self.value, str(element.genre()), regex.I):
                             return True
                         return False
                     elif self.operator == "exclude":
-                        if regex.search(self.value,str(element.genre()),regex.I):
+                        if regex.search(self.value, str(element.genre()), regex.I):
                             return False
                         return True
                 except:
@@ -1294,49 +1371,51 @@ class sort:
             def check(self):
                 try:
                     import scraper.services as ss
-                    if regex.search(self,str(ss.active),regex.I):
+                    if regex.search(self, str(ss.active), regex.I):
                         return True
-                    print("This regex definition did not match any of your active scraper sources. Please make sure you enter a regex def. that matches one of these scraper names:")
+                    print(
+                        "This regex definition did not match any of your active scraper sources. Please make sure you enter a regex def. that matches one of these scraper names:")
                     print(str(ss.active))
                     print()
                     return False
                 except:
                     print()
-                    print("This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
+                    print(
+                        "This value is not in the correct format. Please make sure this value is a valid regex expression and no characters are escaped accidentally.")
                     print()
                     return False
 
-            def apply(self,element):
+            def apply(self, element):
                 import scraper.services as ss
                 if self.operator in ["include", "=="]:
                     services = []
                     for servicename in ss.active:
-                        if regex.search(self.value,servicename,regex.I):
+                        if regex.search(self.value, servicename, regex.I):
                             if not servicename in services:
                                 services += [servicename]
                     if len(services) > 0:
-                        ss.overwrite += [services,]
+                        ss.overwrite += [services, ]
                 else:
                     services = []
                     for servicename in ss.active:
-                        if not regex.search(self.value,servicename,regex.I):
+                        if not regex.search(self.value, servicename, regex.I):
                             if not servicename in services:
                                 services += [servicename]
                     if len(services) > 0:
-                        ss.overwrite += [services,]
+                        ss.overwrite += [services, ]
                 return True
 
         class scraper_adjustment(trigger):
             name = "scraping adjustment"
-            operators = ["scrape w/ airdate format","add text before title", "add text after title"]
+            operators = ["scrape w/ airdate format", "add text before title", "add text after title"]
 
             def check(self):
                 return True
 
-            def apply(self,element):
-                if not hasattr(element,"scraping_adjustment"):
+            def apply(self, element):
+                if not hasattr(element, "scraping_adjustment"):
                     element.scraping_adjustment = []
-                element.scraping_adjustment += [[self.operator,self.value],]
+                element.scraping_adjustment += [[self.operator, self.value], ]
                 return True
 
         def __init__(self, name, triggers, lang, rules) -> None:
@@ -1354,7 +1433,7 @@ class sort:
                 return False
             return self.name == __o.name
 
-        def applies(self,element):
+        def applies(self, element):
             for trigger in self.triggers:
                 for subtrigger in sort.version.trigger.__subclasses__():
                     if subtrigger.name == trigger[0]:
@@ -1364,33 +1443,36 @@ class sort:
                     return False
             return True
 
-    default_triggers = [["retries","<=","48"],["media type","all",""],]
+    default_triggers = [["retries", "<=", "48"], ["media type", "all", ""], ]
     default_language = "en"
     unwanted = ['sample']
     versions = [
         ["1080p SDR",
          [
-            ["retries","<=","48"],
-            ["media type","all",""],
+             ["retries", "<=", "48"],
+             ["media type", "all", ""],
          ],
-         "true", 
+         "true",
          [
-            ["cache status", "requirement", "cached", ""],
-            ["resolution", "requirement", "<=", "1080"],
-            ["resolution", "preference", "highest", ""],
-            ["title", "requirement", "exclude", "([^A-Z0-9]|HD|HQ)(CAM|T(ELE)?(S(YNC)?|C(INE)?)|ADS|HINDI)([^A-Z0-9]|RIP|$)"],
-            ["title", "requirement", "exclude", "(3D)"],
-            ["title", "requirement", "exclude", "(DO?VI?)"],
-            ["title", "requirement", "exclude", "(HDR)"],
-            ["title", "preference", "include", "(EXTENDED|REMASTERED|DIRECTORS|THEATRICAL|UNRATED|UNCUT|CRITERION|ANNIVERSARY|COLLECTORS|LIMITED|SPECIAL|DELUXE|SUPERBIT|RESTORED|REPACK)"],
-            ["size", "preference", "highest", ""],
-            ["seeders", "preference", "highest", ""],
-            ["size", "requirement", ">=", "0.1"],
-        ]],
+             ["cache status", "requirement", "cached", ""],
+             ["resolution", "requirement", "<=", "1080"],
+             ["resolution", "preference", "highest", ""],
+             ["title", "requirement", "exclude",
+              "([^A-Z0-9]|HD|HQ)(CAM|T(ELE)?(S(YNC)?|C(INE)?)|ADS|HINDI)([^A-Z0-9]|RIP|$)"],
+             ["title", "requirement", "exclude", "(3D)"],
+             ["title", "requirement", "exclude", "(DO?VI?)"],
+             ["title", "requirement", "exclude", "(HDR)"],
+             ["title", "preference", "include",
+              "(EXTENDED|REMASTERED|DIRECTORS|THEATRICAL|UNRATED|UNCUT|CRITERION|ANNIVERSARY|COLLECTORS|LIMITED|SPECIAL|DELUXE|SUPERBIT|RESTORED|REPACK)"],
+             ["size", "preference", "highest", ""],
+             ["seeders", "preference", "highest", ""],
+             ["size", "requirement", ">=", "0.1"],
+         ]],
     ]
-    always_on_rules = [version.rule("wanted", "preference", "highest", ""),version.rule("unwanted", "preference", "lowest", "")]
+    always_on_rules = [version.rule("wanted", "preference", "highest", ""),
+                       version.rule("unwanted", "preference", "lowest", "")]
 
-    def __new__(self, scraped_releases: list, version: version,doprint=True):
+    def __new__(self, scraped_releases: list, version: version, doprint=True):
         if len(scraped_releases) > 0:
             for rule in reversed(sort.always_on_rules):
                 rule.apply(scraped_releases)
@@ -1405,8 +1487,10 @@ class sort:
                     ui_print('error: there seems to be an undefined rule in your version settings. skipping this rule.')
                     continue
             if doprint:
-                ui_print('sorting releases for version [' + version.name + '] ... done - found ' + str(len(scraped_releases)) + ' releases')
+                ui_print('sorting releases for version [' + version.name + '] ... done - found ' + str(
+                    len(scraped_releases)) + ' releases')
         return scraped_releases
+
 
 class torrent2magnet:
     class BTFailure(Exception):
@@ -1516,11 +1600,12 @@ class torrent2magnet:
         hashcontents = torrent2magnet.bencode(subj)
         digest = hashlib.sha1(hashcontents).hexdigest()
         return 'magnet:?' \
-                + 'xt=urn:btih:' + digest \
-                + '&dn=' + metadata[b'info'][b'name'].decode() \
-                + '&tr=' + metadata[b'announce'].decode() 
+            + 'xt=urn:btih:' + digest \
+            + '&dn=' + metadata[b'info'][b'name'].decode() \
+            + '&tr=' + metadata[b'announce'].decode()
 
-def print_releases(scraped_releases,uiprint=False):
+
+def print_releases(scraped_releases, uiprint=False):
     longest_file = 0
     longest_cached = 0
     longest_title = 0
@@ -1529,7 +1614,7 @@ def print_releases(scraped_releases,uiprint=False):
     longest_index = 0
     longest_seeders = 0
     for index, release in enumerate(scraped_releases):
-        if hasattr(release,"bitrate"):
+        if hasattr(release, "bitrate"):
             release.printbit = str(round(release.bitrate, 2))
         release.printsize = str(round(release.size, 2))
         release.file = '+' + str(release.wanted) + '/-' + str(release.unwanted)
@@ -1541,20 +1626,21 @@ def print_releases(scraped_releases,uiprint=False):
             longest_title = len(release.title)
         if len(str(release.printsize)) > longest_size:
             longest_size = len(str(release.printsize))
-        if hasattr(release,"bitrate") and len(str(release.printbit)) > longest_bitrate:
+        if hasattr(release, "bitrate") and len(str(release.printbit)) > longest_bitrate:
             longest_bitrate = len(str(release.printbit))
         if len(str(release.seeders)) > longest_seeders:
             longest_seeders = len(str(release.seeders))
         if len(str(index + 1)) > longest_index:
             longest_index = len(str(index + 1))
     for index, release in enumerate(scraped_releases):
-        i = str(index + 1) + ") " + ' ' * (longest_index - len(str(index + 1))) 
-        title = "title: " + release.title + ' ' * (longest_title - len(release.title)) 
+        i = str(index + 1) + ") " + ' ' * (longest_index - len(str(index + 1)))
+        title = "title: " + release.title + ' ' * (longest_title - len(release.title))
         size = " | size: " + str(release.printsize) + ' ' * (longest_size - len(str(release.printsize)))
-        bitrate = " | bitrate: " + str(release.printbit) + ' ' * (longest_bitrate - len(str(release.printbit))) if hasattr(release,"bitrate") else ""
+        bitrate = " | bitrate: " + str(release.printbit) + ' ' * (
+                    longest_bitrate - len(str(release.printbit))) if hasattr(release, "bitrate") else ""
         cached = " | cached: " + '/'.join(release.cached) + ' ' * (longest_cached - len('/'.join(release.cached)))
         seeders = " | seeders: " + str(release.seeders) + ' ' * (longest_seeders - len(str(release.seeders)))
-        files = " | files: " + release.file + ' ' * (longest_file - len(release.file)) 
+        files = " | files: " + release.file + ' ' * (longest_file - len(release.file))
         source = " | source: " + release.source
         if uiprint:
             ui_print(i + title + size + bitrate + cached + seeders + files + source, ui_settings.debug)

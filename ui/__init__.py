@@ -171,7 +171,8 @@ def scrape():
                                         "There was an error adding this uncached torrent to your debrid service. Choose another release?")
                     elif choice == '0':
                         back = True
-                except:
+                except Exception as e:
+                    print("error: " + str(e))
                     back = False
         else:
             print("No releases were found!")
@@ -292,18 +293,18 @@ def load(doprint=False, updated=False):
     elif not settings['version'][0] == ui_settings.version[0] and not ui_settings.version[2] == []:
         update(settings, ui_settings.version)
         updated = True
-    #compatability code for updating from <2.10 
-    if 'Library Service' in settings: 
+    #compatability code for updating from <2.10
+    if 'Library Service' in settings:
         settings['Library collection service'] = settings['Library Service']
         if settings['Library Service'] == ["Plex Library"]:
-            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings: 
+            if 'Plex \"movies\" library' in settings and 'Plex \"shows\" library' in settings:
                 settings['Plex library refresh'] = [settings['Plex \"movies\" library'],settings['Plex \"shows\" library']]
             settings['Library update services'] = ["Plex Libraries"]
         elif settings['Library Service'] == ["Trakt Collection"]:
             settings['Library update services'] = ["Trakt Collection"]
             settings['Trakt refresh user'] = settings['Trakt library user']
     #compatability code for updating from <2.20
-    if not 'Library ignore services' in settings: 
+    if not 'Library ignore services' in settings:
         if settings['Library collection service'] == ["Plex Library"]:
             settings['Library ignore services'] = ["Plex Discover Watch Status"]
             settings["Plex ignore user"] = settings["Plex users"][0][0]
@@ -403,7 +404,7 @@ def threaded(stop):
     else:
         print("Type 'exit' to return to the main menu.")
     timeout = 5
-    regular_check = 1800
+    regular_check = int(ui_settings.loop_interval_seconds)
     timeout_counter = 0
     library = content.classes.library()[0]()
     # get entire plex_watchlist
@@ -488,8 +489,6 @@ def threaded(stop):
                 ui_print("couldnt sort monitored media by newest, using default order.", ui_settings.debug)
             library = content.classes.library()[0]()
             timeout_counter = 0
-            if len(library) == 0:
-                continue
             ui_print('checking new content ...')
             t0 = time.time()
             for element in unique(watchlists):
